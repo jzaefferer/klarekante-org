@@ -32,8 +32,9 @@ var game = {
 }
 
 var quiz = $(".quiz")
-var feedback = quiz.find('.feedback')
 var score = quiz.find('.score')
+var buttons = quiz.find(".btn-secondary")
+var nextButton = quiz.find(".next")
 shuffle(game.items)
 
 function showQuestion() {
@@ -41,15 +42,17 @@ function showQuestion() {
   var item = game.items[game.current]
   var answers = shuffle(item.others.concat([item.answer]))
   quiz.find(".question").text(item.question)
-  quiz.find("button").off('click').click(handleAnswer).each(function (index) {
+  buttons.off('click').click(handleAnswer).each(function (index) {
     $(this).text(answers[index])
   })
   quiz.removeAttr("hidden")
+  nextButton.prop("disabled", true)
+  buttons.prop("disabled", false)
 }
 
 function proceed() {
-  feedback.text("...")
   game.current += 1
+  buttons.removeClass("btn-success btn-danger")
   if (game.current > game.items.length - 1) {
     console.log('reset current to 0, from', game.current)
     game.current = 0
@@ -60,19 +63,26 @@ function proceed() {
 function handleAnswer() {
   var result
   var item = game.items[game.current]
-  if (item.answer === $(this).text()) {
+  var clickedButton = $(this)
+  if (item.answer === clickedButton.text()) {
     result = "Korrekt!"
     game.score.correct += 1
   } else {
     result = "Falsch! Die richtige Antwort ist: " + item.answer + "."
   }
+  buttons.each(function (index) {
+    if (item.answer === $(this).text()) {
+      $(this).addClass("btn-success")
+    } else if (this === clickedButton[0]) {
+      $(this).addClass("btn-danger")
+    }
+  })
   game.score.total += 1
-  feedback.text(result + " Lade nächste Frage...")
+  nextButton.prop("disabled", false)
+  buttons.prop("disabled", true)
 
   score.text("Punkte: " + game.score.correct + "/" + game.score.total)
-
-  setTimeout(proceed, 3000)
-  $(this).blur()
 }
 
 showQuestion()
+nextButton.click(proceed)
